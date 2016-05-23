@@ -25,7 +25,9 @@ type private AnthologyConfig = FSharp.Configuration.YamlConfig<"anthology.yaml">
 
 let Serialize (antho : Anthology) =
     let config = new AnthologyConfig()
-    config.anthology.artifacts <- antho.Artifacts
+    config.anthology.artifacts.uri <- antho.Artifacts.Uri
+    config.anthology.artifacts.``type`` <- antho.Artifacts.Type.toString
+
     config.anthology.vcs <- antho.Vcs.toString
 
     config.anthology.nugets.Clear()
@@ -98,6 +100,10 @@ let Deserialize (content) =
           Branch = None 
           Name = RepositoryId.from Env.MASTER_REPO }
 
+    let convertToArtifactStore (item : AnthologyConfig.anthology_Type.artifacts_Type) : ArtifactStore =  
+        { Type = ArtifactStoreType.from item.``type``
+          Uri = item.uri }
+
     let rec convertToBuildableRepositories (items : AnthologyConfig.anthology_Type.repositories_Item_Type list) =
         match items with
         | [] -> Set.empty
@@ -163,7 +169,7 @@ let Deserialize (content) =
 
     let repos = convertToBuildableRepositories (config.anthology.repositories |> List.ofSeq)
     let mainRepo = convertToRepository (config.anthology.mainrepository)
-    { Artifacts = config.anthology.artifacts
+    { Artifacts = convertToArtifactStore config.anthology.artifacts
       Vcs = VcsType.from config.anthology.vcs
       NuGets = convertToNuGets (config.anthology.nugets |> List.ofSeq)
       MasterRepository = mainRepo

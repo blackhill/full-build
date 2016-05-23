@@ -1,5 +1,7 @@
 ﻿anthology:
-    artifacts: C:\Binaries
+    artifacts: 
+        type: file
+        uri: C:\Binaries
     nugets:
       - nuget: https://www.nuget.org/api/v2/
     test: nunit

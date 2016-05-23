@@ -188,8 +188,19 @@ type Application =
       Publisher : PublisherType
       Project : ProjectId }
 
+type ArtifactStoreType =
+    | File
+    | Azure
+with
+     member this.toString = toString this
+     static member from s = fromString<ArtifactStoreType> s
+
+type ArtifactStore =
+    { Uri : string 
+      Type : ArtifactStoreType }
+
 type Anthology = 
-    { Artifacts : string
+    { Artifacts : ArtifactStore
       NuGets : RepositoryUrl list 
       Vcs : VcsType
       MasterRepository : Repository

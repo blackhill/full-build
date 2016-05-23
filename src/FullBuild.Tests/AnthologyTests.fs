@@ -29,7 +29,7 @@ let CheckToRepository () =
 [<Test>]
 let CheckEqualityWithPermutation () =
     let antho1 = {
-        Artifacts = @"c:\toto"
+        Artifacts = { Uri = @"c:\toto"; Type = ArtifactStoreType.File }
         NuGets = []
         MasterRepository = { Name = RepositoryId.from ".full-build"; Url = RepositoryUrl.from "https://github.com/pchalamet/cassandra-sharp-full-build" ; Branch = None}
         Repositories = [ { Builder = BuilderType.MSBuild
@@ -53,7 +53,7 @@ let CheckEqualityWithPermutation () =
         Vcs = VcsType.Git }
 
     let antho2 = {
-        Artifacts = @"c:\toto"
+        Artifacts = { Uri = @"c:\toto"; Type = ArtifactStoreType.File }
         NuGets = []
         MasterRepository = { Name = RepositoryId.from ".full-build"; Url = RepositoryUrl.from "https://github.com/pchalamet/cassandra-sharp-full-build" ; Branch = None}
         Repositories = [ { Builder = BuilderType.MSBuild

@@ -86,9 +86,6 @@
     <None Include="paket-indexed.dependencies">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="anthology.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="packages.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

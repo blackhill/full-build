@@ -44,7 +44,7 @@ let Create (path : string) (uri : RepositoryUrl) (bin : string) (vcsType : VcsTy
         Environment.CurrentDirectory <- wsDir.FullName
         let repo = { Name = RepositoryId.from Env.MASTER_REPO; Url = uri; Branch = None }
 
-        let antho = { Artifacts = bin
+        let antho = { Artifacts = { Uri = bin; Type = ArtifactStoreType.File }
                       NuGets = []
                       MasterRepository = repo
                       Repositories = Set.empty

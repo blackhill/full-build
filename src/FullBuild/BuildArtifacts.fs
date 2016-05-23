@@ -19,11 +19,11 @@ open Anthology
 
 
 
-let Publish (branch : string option) buildnum hash =
+let PublishFile (branch : string option) buildnum hash =
     let antho = Configuration.LoadAnthology ()
     let mainRepo = antho.MasterRepository
     let wsDir = Env.GetFolder Env.Workspace
-    let versionDir = DirectoryInfo(antho.Artifacts) |> GetSubDirectory hash
+    let versionDir = DirectoryInfo(antho.Artifacts.Uri) |> GetSubDirectory hash
     let tmpVersionDir = DirectoryInfo(versionDir.FullName + ".tmp")
     if tmpVersionDir.Exists then
         tmpVersionDir.Delete(true)
@@ -46,7 +46,7 @@ let Publish (branch : string option) buildnum hash =
         else
             printfn "[WARNING] Build output already exists - skipping"
 
-        let latestVersionFile = DirectoryInfo(antho.Artifacts) |> GetFile "versions"
+        let latestVersionFile = DirectoryInfo(antho.Artifacts.Uri) |> GetFile "versions"
         let version = match branch with
                       | None -> sprintf "%s:%s:default" buildnum hash
                       | Some br -> sprintf "%s:%s:%s" buildnum hash br
@@ -61,9 +61,9 @@ let Publish (branch : string option) buildnum hash =
 
              reraise ()
 
-let PullReferenceBinaries version =
+let PullReferenceBinariesFile version =
     let antho = Configuration.LoadAnthology ()
-    let artifactDir = antho.Artifacts |> DirectoryInfo
+    let artifactDir = antho.Artifacts.Uri |> DirectoryInfo
 
     let versionDir = artifactDir |> GetSubDirectory version
     if versionDir.Exists then
@@ -74,9 +74,19 @@ let PullReferenceBinaries version =
     else
         DisplayHighlight "[WARNING] No reference binaries found"
 
-let PullLatestReferenceBinaries () =
+let PullLatestReferenceBinariesFile () =
     let antho = Configuration.LoadAnthology ()
-    let versionsFile = DirectoryInfo(antho.Artifacts) |> GetFile "versions"
+    let versionsFile = DirectoryInfo(antho.Artifacts.Uri) |> GetFile "versions"
     let version = File.ReadAllLines(versionsFile.FullName) |> Seq.last
     let hash = version.Split(':') |> Seq.toArray
-    PullReferenceBinaries hash.[1]
+    PullReferenceBinariesFile hash.[1]
+
+
+let Publish (branch : string option) buildnum hash =
+    PublishFile branch buildnum hash
+
+let PullReferenceBinaries version =
+    PullReferenceBinariesFile version
+
+let PullLatestReferenceBinaries () =
+    PullLatestReferenceBinariesFile ()

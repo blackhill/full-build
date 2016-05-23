@@ -8,7 +8,7 @@ open StringHelpers
 [<Test>]
 let CheckSaveLoadAnthology () =
     let antho1 = {
-        Artifacts = @"c:\toto"
+        Artifacts = { Uri = @"c:\toto"; Type = ArtifactStoreType.File }
         NuGets = [ RepositoryUrl.from "https://www.nuget.org/api/v2/"; RepositoryUrl.from "file:///C:/src/full-build-packages/"]
         MasterRepository = { Name = RepositoryId.from ".full-build"; Url = RepositoryUrl.from "https://github.com/pchalamet/cassandra-sharp-full-build"; Branch = None }
         Repositories = [ { Builder = BuilderType.MSBuild
