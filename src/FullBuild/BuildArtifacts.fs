@@ -13,80 +13,20 @@
 //   limitations under the License.
 
 module BuildArtifacts
-open System.IO
-open IoHelpers
 open Anthology
 
-
-
-let PublishFile (branch : string option) buildnum hash =
-    let antho = Configuration.LoadAnthology ()
-    let mainRepo = antho.MasterRepository
-    let wsDir = Env.GetFolder Env.Workspace
-    let versionDir = DirectoryInfo(antho.Artifacts.Uri) |> GetSubDirectory hash
-    let tmpVersionDir = DirectoryInfo(versionDir.FullName + ".tmp")
-    if tmpVersionDir.Exists then
-        tmpVersionDir.Delete(true)
-
-    try
-        let doPublish = not versionDir.Exists
-        if doPublish then            
-            let sourceBinDir = Env.GetFolder Env.Bin
-            let targetBinDir = tmpVersionDir |> GetSubDirectory Env.PUBLISH_BIN_FOLDER
-            IoHelpers.CopyFolder sourceBinDir targetBinDir true
-
-            let appTargetDir = tmpVersionDir |> GetSubDirectory Env.PUBLISH_APPS_FOLDER
-            let appDir = Env.GetFolder Env.AppOutput
-            IoHelpers.CopyFolder appDir appTargetDir true
-
-            // publish
-            Try (fun () -> Vcs.VcsPush wsDir antho.Vcs mainRepo)
-
-            tmpVersionDir.MoveTo(versionDir.FullName)
-        else
-            printfn "[WARNING] Build output already exists - skipping"
-
-        let latestVersionFile = DirectoryInfo(antho.Artifacts.Uri) |> GetFile "versions"
-        let version = match branch with
-                      | None -> sprintf "%s:%s:default" buildnum hash
-                      | Some br -> sprintf "%s:%s:%s" buildnum hash br
-        File.AppendAllLines(latestVersionFile.FullName, [version])
-        printfn "[version] %s" hash
-    with
-        _ -> versionDir.Refresh ()
-             if versionDir.Exists then versionDir.MoveTo(versionDir.FullName + ".failed")
-
-             tmpVersionDir.Refresh()
-             if tmpVersionDir.Exists then tmpVersionDir.Delete(true)
-
-             reraise ()
-
-let PullReferenceBinariesFile version =
-    let antho = Configuration.LoadAnthology ()
-    let artifactDir = antho.Artifacts.Uri |> DirectoryInfo
-
-    let versionDir = artifactDir |> GetSubDirectory version
-    if versionDir.Exists then
-        DisplayHighlight (sprintf "Getting binaries %s" version)
-        let sourceBinDir = versionDir |> GetSubDirectory Env.PUBLISH_BIN_FOLDER
-        let targetBinDir = Env.GetFolder Env.Bin
-        IoHelpers.CopyFolder sourceBinDir targetBinDir false
-    else
-        DisplayHighlight "[WARNING] No reference binaries found"
-
-let PullLatestReferenceBinariesFile () =
-    let antho = Configuration.LoadAnthology ()
-    let versionsFile = DirectoryInfo(antho.Artifacts.Uri) |> GetFile "versions"
-    let version = File.ReadAllLines(versionsFile.FullName) |> Seq.last
-    let hash = version.Split(':') |> Seq.toArray
-    PullReferenceBinariesFile hash.[1]
-
+let choosePub fileFun azureFun =
+    let antho = Configuration.LoadAnthology()
+    let f = match antho.Artifacts.Type with
+            | ArtifactStoreType.File -> fileFun
+            | ArtifactStoreType.Azure -> azureFun
+    f
 
 let Publish (branch : string option) buildnum hash =
-    PublishFile branch buildnum hash
+    (choosePub ArtifactFile.publishFile ArtifactAzure.publishAzure) branch buildnum hash
 
 let PullReferenceBinaries version =
-    PullReferenceBinariesFile version
+    (choosePub ArtifactFile.publishPullRefBinFile ArtifactAzure.publishPullRefBinAzure) version
 
 let PullLatestReferenceBinaries () =
-    PullLatestReferenceBinariesFile ()
+    (choosePub ArtifactFile.publishPullLatestRefBinFile ArtifactAzure.publishPullLatestRefBinAzure) ()
